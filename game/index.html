@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Penguin vs Fish — Ice Maze Arcade</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="stage">
+    <canvas id="game" tabindex="0" aria-label="Penguin vs Fish game board"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-item"><span class="hud-label">SCORE</span><span id="score">0</span></div>
+      <div class="hud-item"><span class="hud-label">MODE</span><span id="mode-hud">NORMAL</span></div>
+      <div class="hud-item"><span class="hud-label">CHALLENGE</span><span id="modifier-hud">BLIZZARD</span></div>
+      <div class="hud-item"><span class="hud-label">LEVEL</span><span id="level">1</span></div>
+      <div class="hud-item"><span class="hud-label">LIVES</span><span id="lives">3</span></div>
+      <div class="hud-item"><span class="hud-label">HIGH</span><span id="highscore">0</span></div>
+      <div class="hud-item"><span class="hud-label">SHIELD</span><span id="shield-hud">0 / 20</span></div>
+      <div class="hud-item"><span class="hud-label">GOLDEN KRILL</span><span id="golden-krill-hud">0</span></div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="overlay" class="overlay">
+      <div class="panel menu-panel">
+        <h1>PENGUIN vs FISH</h1>
+        <div class="menu-hero">
+          <div class="menu-intro">
+            <p class="tagline">Brave the ice maze, outswim the fish, and gather rewards!</p>
+            <div class="menu-actions">
+              <div class="mode-buttons">
+                <button id="start-btn">NORMAL MODE</button>
+                <button id="survival-btn" class="survival-button">SURVIVAL MODE</button>
+              </div>
+              <button id="menu-shop-btn" class="secondary-button">IGLOO SHOP</button>
+            </div>
+          </div>
+          <figure class="preview-card">
+            <canvas id="menu-preview" width="480" height="216" role="img" aria-label="Animated preview of the penguin dodging fish in an icy maze"></canvas>
+            <figcaption>GAMEPLAY PREVIEW</figcaption>
+          </figure>
+        </div>
+        <div class="menu-guide">
+          <section class="menu-section">
+            <h2>Instructions</h2>
+            <ul class="menu-list">
+              <li>Collect krill for points and ice crystals to freeze fish so you can eat them.</li>
+              <li>Eat all four fish to clear the level and unlock a new maze.</li>
+              <li>Find a shield emblem every other level. Each gives 5 shield, up to 20; a hit costs 5, and a hit with no shield costs a life.</li>
+              <li>Collect Golden Krill to buy permanent upgrades in the Igloo Shop.</li>
+              <li>Earn up to 3 stars: clear the level, finish under 90 seconds, and collect every krill without taking a hit.</li>
+              <li><b>Survival:</b> the maze shifts after every four fish, while fish gain speed with each maze. Keep going until all lives are lost.</li>
+              <li>Each level also rolls one random challenge: crosswind gusts, a glowing night maze, or a fish frenzy with more fish and ice crystals.</li>
+            </ul>
+          </section>
+          <section class="menu-section">
+            <h2>Controls</h2>
+            <ul class="menu-list control-list">
+              <li><b>Move</b><span>Arrow keys or WASD</span></li>
+              <li><b>Belly slide</b><span>Space</span></li>
+              <li><b>Pause / resume</b><span>P or Esc</span></li>
+            </ul>
+          </section>
+        </div>
+        <p class="hint">Press any key to start</p>
+      </div>
+    </div>
+
+    <div id="pause-overlay" class="overlay hidden">
+      <div class="panel">
+        <h1>PAUSED</h1>
+        <button id="resume-btn">RESUME</button>
+        <button id="pause-shop-btn" class="secondary-button">IGLOO SHOP</button>
+        <button id="quit-btn">QUIT TO MENU</button>
+      </div>
+    </div>
+
+    <div id="shop-overlay" class="overlay hidden" role="dialog" aria-labelledby="shop-title">
+      <div class="panel shop-panel">
+        <div class="shop-heading">
+          <span class="shop-emblem" aria-hidden="true">✦</span>
+          <h1 id="shop-title">IGLOO SHOP</h1>
+          <p>Trade your Golden Krill for a stronger next run.</p>
+        </div>
+        <div class="shop-balance">
+          <span class="balance-label">YOUR GOLDEN KRILL</span>
+          <span class="balance-total"><span aria-hidden="true">✦</span> <span id="shop-balance">0</span></span>
+        </div>
+        <div class="shop-items">
+          <section class="shop-item">
+            <div class="upgrade-title">
+              <span class="upgrade-icon belly-icon" aria-hidden="true">➤</span>
+              <div><h2>Belly Slide</h2><p class="upgrade-subtitle">Slide farther</p></div>
+            </div>
+            <p class="upgrade-description">Increases belly-slide distance by 15% per level.</p>
+            <div class="upgrade-progress" data-upgrade-progress="bellySlide" role="img" aria-label="Belly Slide upgrade level">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="upgrade-meta"><span id="upgrade-bellySlide-level">Level 0 / 5</span><span id="upgrade-bellySlide-cost">3 Golden Krill</span></div>
+            <button class="buy-upgrade" data-upgrade="bellySlide">BUY UPGRADE</button>
+          </section>
+          <section class="shop-item">
+            <div class="upgrade-title">
+              <span class="upgrade-icon feather-icon" aria-hidden="true">⬟</span>
+              <div><h2>Thicker Feathers</h2><p class="upgrade-subtitle">Start protected</p></div>
+            </div>
+            <p class="upgrade-description">Adds one starting hit of shield protection per level, up to 20 points.</p>
+            <div class="upgrade-progress" data-upgrade-progress="feathers" role="img" aria-label="Thicker Feathers upgrade level">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="upgrade-meta"><span id="upgrade-feathers-level">Level 0 / 5</span><span id="upgrade-feathers-cost">3 Golden Krill</span></div>
+            <button class="buy-upgrade" data-upgrade="feathers">BUY UPGRADE</button>
+          </section>
+          <section class="shop-item">
+            <div class="upgrade-title">
+              <span class="upgrade-icon freeze-icon" aria-hidden="true">❄</span>
+              <div><h2>Sub-Zero Freeze</h2><p class="upgrade-subtitle">Freeze them longer</p></div>
+            </div>
+            <p class="upgrade-description">Extends fish freeze duration by 15% per level.</p>
+            <div class="upgrade-progress" data-upgrade-progress="freeze" role="img" aria-label="Sub-Zero Freeze upgrade level">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="upgrade-meta"><span id="upgrade-freeze-level">Level 0 / 5</span><span id="upgrade-freeze-cost">3 Golden Krill</span></div>
+            <button class="buy-upgrade" data-upgrade="freeze">BUY UPGRADE</button>
+          </section>
+          <section class="shop-item">
+            <div class="upgrade-title">
+              <span class="upgrade-icon magnet-icon" aria-hidden="true">⌕</span>
+              <div><h2>Magnet Radius</h2><p class="upgrade-subtitle">Pull in more krill</p></div>
+            </div>
+            <p class="upgrade-description">Collects regular krill from one extra tile per level.</p>
+            <div class="upgrade-progress" data-upgrade-progress="magnet" role="img" aria-label="Magnet Radius upgrade level">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="upgrade-meta"><span id="upgrade-magnet-level">Level 0 / 5</span><span id="upgrade-magnet-cost">3 Golden Krill</span></div>
+            <button class="buy-upgrade" data-upgrade="magnet">BUY UPGRADE</button>
+          </section>
+        </div>
+        <button id="shop-back-btn" class="secondary-button">BACK</button>
+      </div>
+    </div>
+
+    <div id="gameover-overlay" class="overlay hidden">
+      <div class="panel">
+        <h1>GAME OVER</h1>
+        <p class="final-score">Score: <span id="go-score">0</span></p>
+        <p class="high-score" id="go-high">High Score: 0</p>
+        <button id="restart-btn">PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <div id="level-overlay" class="overlay hidden">
+      <div class="panel">
+        <h1 id="level-msg">LEVEL CLEAR!</h1>
+        <p id="level-stars" class="level-stars"></p>
+        <p id="level-best-stars" class="high-score"></p>
+        <ul id="level-star-details" class="star-details"></ul>
+        <button id="next-level-btn">START NEXT LEVEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
